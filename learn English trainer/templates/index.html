@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English Trainer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body style="background-color: {{ bg_color }};">
+    <div class="container">
+        <!-- Image output of the word -->
+        <div>
+            <img src="/image/{{ id_nr }}" alt="Word Image">
+        </div>
+
+        <!-- Sounds output of the word -->
+        <button style="font-size: 18px; padding: 10px 10px;" type="button" onclick="playSequentialSounds({{ id_nr }})">📢</button>
+        <script>
+            function playSequentialSounds(id_nr) {
+                // Create audio elements for English and Russian sounds
+                const audio1 = new Audio(`/sound/en/${id_nr}`);
+                const audio2 = new Audio(`/sound/ru/${id_nr}`);
+
+                // Play Russian sound after English sound ends
+                audio1.onended = function() {
+                    audio2.play();
+                };
+
+                // Play the English sound
+                audio1.play();
+            }
+        </script>
+
+        <!-- Text output of the word -->
+        <div id="wordContainer">
+            <h1 id="wordText" style="letter-spacing: normal; word-spacing: normal;">
+                {%- for i in range(word_text|length) -%}
+                    {%- set color = 'black' if pattern and i < pattern|length and pattern[i] == 'a' else 'red' -%}
+                    <span style="color: {{ color }};">{{ word_text[i] }}</span>
+                {%- endfor -%}
+            </h1>
+        </div>
+
+        <!-- 🎤 User tries their pronunciation -->
+        <button id="pronounceBtn">🎤 Check My Pronunciation</button>
+        <script>
+            async function startRecording(targetWord) {
+                // Check if microphone access is available
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    alert("Microphone access denied or unsupported on this device/browser.");
+                    return;
+                }
+
+                try {
+                    // Request access to the microphone
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    const mediaRecorder = new MediaRecorder(stream);
+                    const chunks = [];
+
+                    // Collect audio data chunks
+                    mediaRecorder.ondataavailable = e => chunks.push(e.data);
+                    mediaRecorder.onstop = async () => {
+                        const blob = new Blob(chunks, { type: 'audio/webm' }); // webm format for browser compatibility
+                        const formData = new FormData();
+                        formData.append('audio_data', blob);  // match your Flask route
+                        formData.append('word', targetWord);
+
+                        try {
+                            // Send the audio data to the server for processing
+                            const response = await fetch('/check', {
+                                method: 'POST',
+                                body: formData
+                            });
+                            const result = await response.json();
+
+                            if (result.success) {
+                                // Show success or failure message
+                                alert(result.match ? "✅ Correct!" : `❌ You said: ${result.spoken}`);
+                            } else {
+                                alert("⚠️ Error: " + result.error);
+                            }
+                        } catch (err) {
+                            alert("⚠️ Network error: " + err);
+                        }
+                    };
+
+                    // Start recording
+                    mediaRecorder.start();
+                    setTimeout(() => mediaRecorder.stop(), 3000); // record for 3 seconds
+                } catch (err) {
+                    alert("Microphone access denied or error: " + err);
+                }
+            }
+
+            // Attach the startRecording function to the button
+            document.getElementById("pronounceBtn").onclick = () => startRecording('{{ word }}');
+        </script>
+
+        <!-- Input text field of the word -->
+        <button id="editButton" style="font-size: 18px; padding: 10px 10px;" type="button" onclick="replaceWithInput()">➔</button>
+        <script>
+            function replaceWithInput() {
+                const container = document.getElementById("wordContainer");
+
+                // Replace <h1> with a clean input field with autofill disabled
+                container.innerHTML = `
+                    <form id="wordForm" autocomplete="off" style="margin: 10px;">
+                        <input type="text" id="wordInput" name="wordInput" autocomplete="off" style="padding: 8px; font-size: 16px;">
+                    </form>
+                `;
+
+                // Remove the edit button
+                document.getElementById("editButton").remove();
+
+                // Add a new submit button with spacing
+                const submitBtn = document.createElement("button");
+                submitBtn.innerText = "➔";
+                submitBtn.onclick = submitNewWord;
+                submitBtn.style.marginTop = "10px";
+                submitBtn.style.padding = "8px 12px";
+                submitBtn.style.fontSize = "16px";
+                document.body.appendChild(submitBtn);
+            }
+
+            function submitNewWord() {
+                const newWord = document.getElementById("wordInput").value;
+
+                // Send the new word to the server for processing
+                fetch("/process", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded"
+                    },
+                    body: `userText=${encodeURIComponent(newWord)}&id_nr={{ id_nr }}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data.message);  // optional debugging
+                    window.location.href = `/word/${data.next_id}`;  // reload with next id
+                });
+            }
+        </script>
+    </div>
+</body>
+</html>

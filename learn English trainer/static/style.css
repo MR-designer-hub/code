@@ -1,0 +1,53 @@
+body {
+    font-size: 1.2rem;   /* bigger default text */
+    line-height: 1.5;
+}
+
+input, button {
+    font-size: 1.1rem;   /* touch-friendly */
+    padding: 10px 15px;
+    border-radius: 8px;
+}
+
+img {
+    max-width: 100%;     /* prevent overflow */
+    height: auto;
+}
+
+/* Optional: center content */
+.container {
+    width: 95%;
+    margin: 0 auto;
+    text-align: center;
+}
+
+/* For small screens (<= 768px, typical tablets/phones) */
+@media (max-width: 768px) {
+    body {
+        font-size: 1.4rem;
+    }
+
+    input, button {
+        font-size: 1.2rem;
+        padding: 12px 18px;
+    }
+}
+
+/* General dropdown styling */
+select {
+    width: 100%;           /* make it full width */
+    max-width: 400px;      /* but don’t go too wide on desktops */
+    padding: 12px;         /* larger touch area */
+    font-size: 1.2em;      /* bigger text */
+    border-radius: 8px;    /* rounded corners */
+    border: 1px solid #ccc;
+    background-color: #fff;
+}
+
+/* On very small devices, force even bigger size */
+@media (max-width: 600px) {
+    select {
+        font-size: 1.4em;
+        padding: 14px;
+    }
+}

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spelling App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+  <div class="container">
+    <h1>English trainer</h1>
+        <form method="post" action="{{ url_for('set_user') }}">
+            <label for="user">Choose the user:</label>
+            <select id="user" name="user" required>
+                <option value="user_m">User 1</option>
+                <option value="user_n">User 2</option>
+                <option value="user_h">User 3</option>
+            </select>
+            <br><br>
+                <label for="table_name">Choose the table:</label>
+            <select name="table_name" id="table_name" required>
+            <option value="general_words">General Words</option>
+            <option value="irregular_verbs">Irregular verbs</option>
+            <option value="phrasal_verbs">Phrasal Verbs</option>
+            <option value="main_groups">Main groups</option>
+
+        </select>
+        <br><br>
+
+        <label for="start_id">Begin form word#:</label>
+        <input type="number" id="start_id" name="start_id" value="1" min="1">
+        <br><br>
+
+        <label for="max_id">Finish the word#:</label>
+        <input type="number" id="max_id" name="max_id" value="20" min="1">
+        <br><br>
+            <button type="submit">Start</button>
+        </form>
+
+  </div>
+</body>
+</html>
